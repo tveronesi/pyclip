@@ -1,0 +1,6 @@
+services:
+  pyclip:
+    build: .
+    volumes:
+      - ./:/output
+    working_dir: /output

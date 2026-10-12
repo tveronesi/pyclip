@@ -107,3 +107,11 @@ docker run --rm -v $(pwd):/output pyclip \
 docker run --rm -v $(pwd):/output pyclip \
   --no-cache "https://www.youtube.com/watch?v=dQw4w9WgXcQ" 01:00-01:30 /output/clip3.mp3
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to report issues and submit changes.
+
+## License
+
+pyclip is licensed under the [MIT License](LICENSE).

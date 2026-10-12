@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Extract audio/video clips from YouTube videos by timestamps."""
+# pylint: disable=import-error
 
 import os
 import re
@@ -24,6 +25,7 @@ TIMESTAMP_RE = re.compile(
 
 
 def extract_video_id(url: str) -> str | None:
+    """Return the YouTube video ID for a URL, or None if not found."""
     parsed = urlparse(url)
     if 'youtube.com' in parsed.netloc:
         return parse_qs(parsed.query).get('v', [None])[0]
@@ -33,25 +35,28 @@ def extract_video_id(url: str) -> str | None:
 
 
 def parse_timestamp(ts: str) -> float:
+    """Convert SS, MM:SS or HH:MM:SS into seconds."""
     parts = ts.split(':')
     parts = [float(p) for p in parts]
     if len(parts) == 1:
         return parts[0]
-    elif len(parts) == 2:
+    if len(parts) == 2:
         return parts[0] * 60 + parts[1]
-    elif len(parts) == 3:
+    if len(parts) == 3:
         return parts[0] * 3600 + parts[1] * 60 + parts[2]
     raise ValueError(f"Invalid timestamp: {ts}")
 
 
 def validate_url(url: str) -> bool:
+    """Check that the URL is an http(s) YouTube link."""
     parsed = urlparse(url)
     return (parsed.scheme in ('http', 'https')
             and ('youtube.com' in parsed.netloc or 'youtu.be' in parsed.netloc))
 
 
 def download_audio(url: str, temp_dir: str, cache_dir: str | None, progress: Progress) -> Path:
-    import yt_dlp
+    """Download audio as WAV (or return the cached copy)."""
+    import yt_dlp  # pylint: disable=import-outside-toplevel
 
     if cache_dir:
         video_id = extract_video_id(url)
@@ -69,7 +74,11 @@ def download_audio(url: str, temp_dir: str, cache_dir: str | None, progress: Pro
             if total:
                 progress.update(download_task, total=total, completed=d.get('downloaded_bytes', 0))
             else:
-                progress.update(download_task, total=None, description=f"Downloading audio {d.get('_percent_str', '').strip()}")
+                pct = d.get('_percent_str', '').strip()
+                progress.update(
+                    download_task, total=None,
+                    description=f"Downloading audio {pct}",
+                )
         elif d['status'] == 'finished':
             progress.update(download_task, description="Converting")
 
@@ -107,7 +116,8 @@ def download_audio(url: str, temp_dir: str, cache_dir: str | None, progress: Pro
 
 
 def download_video(url: str, temp_dir: str, cache_dir: str | None, progress: Progress) -> Path:
-    import yt_dlp
+    """Download the video (or return the cached copy)."""
+    import yt_dlp  # pylint: disable=import-outside-toplevel
 
     if cache_dir:
         video_id = extract_video_id(url)
@@ -127,7 +137,11 @@ def download_video(url: str, temp_dir: str, cache_dir: str | None, progress: Pro
             if total:
                 progress.update(download_task, total=total, completed=d.get('downloaded_bytes', 0))
             else:
-                progress.update(download_task, total=None, description=f"Downloading video {d.get('_percent_str', '').strip()}")
+                pct = d.get('_percent_str', '').strip()
+                progress.update(
+                    download_task, total=None,
+                    description=f"Downloading video {pct}",
+                )
         elif d['status'] == 'finished':
             progress.update(download_task, description="Processing")
 
@@ -160,6 +174,7 @@ def download_video(url: str, temp_dir: str, cache_dir: str | None, progress: Pro
 
 
 def extract_clip(audio: AudioSegment, start_s: float, end_s: float) -> AudioSegment:
+    """Slice an audio segment between two second offsets."""
     start_ms = int(start_s * 1000)
     end_ms = int(end_s * 1000)
     if start_ms >= end_ms:
@@ -168,6 +183,7 @@ def extract_clip(audio: AudioSegment, start_s: float, end_s: float) -> AudioSegm
 
 
 def extract_video_clip(input_path: str, output_path: str, start_s: float, end_s: float) -> None:
+    """Trim a video with ffmpeg."""
     duration = end_s - start_s
     cmd = [
         'ffmpeg', '-y',
@@ -189,6 +205,7 @@ def extract_video_clip(input_path: str, output_path: str, start_s: float, end_s:
 @click.option('--no-cache', is_flag=True, help='Skip cache, force fresh download')
 @click.option('--temp-dir', type=click.Path(), default=None, help='Override temp directory')
 def main(url: str, clips: tuple, keep_raw: bool, no_cache: bool, temp_dir: str | None):
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     """Extract audio/video clips from a YouTube video.
 
     Usage: pyclip URL START-END OUTPUT [START-END OUTPUT ...]
@@ -318,11 +335,11 @@ def main(url: str, clips: tuple, keep_raw: bool, no_cache: bool, temp_dir: str |
 
     except Exception as e:
         click.echo(f"Error: {e}", err=True)
-        raise SystemExit(1)
+        raise SystemExit(1) from e
     finally:
         if not keep_raw and os.path.isdir(temp_dir):
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 if __name__ == '__main__':
-    main()
+    main()  # pylint: disable=no-value-for-parameter

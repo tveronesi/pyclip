@@ -15,32 +15,55 @@ No existing Python package combines YouTube downloading with timestamp-based ext
 
 **yt-dlp** and **pytube** download full videos/audio but can't trim by timestamp in one step.
 **pydub** trims audio files but has no YouTube integration.
-**pyclip** does both — download and extract — in a single Docker command.
+**pyclip** does both — download and extract — in a single command. Docker is the recommended,
+most hassle-free way to run it: the image includes Python, the app dependencies, and FFmpeg, so
+you don't need to install or configure them on your machine.
 
 ## Requirements
 
-- Docker
+- Docker (recommended; handles the app and system dependencies for you)
+- For local runs only: Python 3.10 or newer and FFmpeg (`ffmpeg` and `ffprobe` on your `PATH`)
 
-## Build
+## Run locally
+
+Choose this if you prefer not to use Docker. It requires installing and maintaining Python,
+the Python dependencies, and FFmpeg yourself. For the simpler setup, use [Run with Docker](#run-with-docker).
 
 ```bash
-# Step 1: build the base image (only when system deps change)
-docker build -t pyclip-base:latest -f Dockerfile.base .
-
-# Step 2: build the app image (fast, skips ffmpeg install)
-docker build -t pyclip .
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install .
 ```
 
-## Usage
+Install FFmpeg using your operating system's package manager or installer, and ensure both
+`ffmpeg` and `ffprobe` are available on your `PATH`. On Windows PowerShell, use these commands
+to create and activate the environment:
+
+```powershell
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install .
+```
+
+Run `pyclip` from the directory where you want the download cache stored:
 
 ```bash
-docker run --rm -v $(pwd):/output pyclip <URL> <TIMESTAMP> <OUTPUT> [TIMESTAMP OUTPUT ...]
+pyclip "https://www.youtube.com/watch?v=dQw4w9WgXcQ" \
+  01:00-01:30 clip.mp4
+```
+
+Downloaded media is cached in `.pyclip-cache/` in the current directory. Use `--no-cache` to
+skip the cache.
+
+## Run with Docker
+
+```bash
+docker build -t pyclip .
+docker run --rm -v $(pwd):/output pyclip <URL> <START-END> <OUTPUT> [START-END OUTPUT ...]
 ```
 
 ### Timestamp formats
 
-| Format | Example |
-|--------|---------|
 `START-END` uses the timestamp formats below. Either side may be omitted:
 
 | Format | Example |

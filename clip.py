@@ -253,7 +253,10 @@ def main(url: str, clips: tuple, keep_raw: bool, no_cache: bool, temp_dir: str |
     else:
         os.makedirs(temp_dir, exist_ok=True)
 
-    cache_dir = None if no_cache else '/output/.pyclip-cache'
+    cache_dir = None if no_cache else os.environ.get(
+        'PYCLIP_CACHE_DIR',
+        str(Path.cwd() / '.pyclip-cache'),
+    )
     if cache_dir:
         os.makedirs(cache_dir, exist_ok=True)
 

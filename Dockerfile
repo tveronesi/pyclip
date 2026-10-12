@@ -22,4 +22,6 @@ USER appuser
 
 WORKDIR /app
 
+ENV PYCLIP_CACHE_DIR=/output/.pyclip-cache
+
 ENTRYPOINT ["pyclip"]

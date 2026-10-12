@@ -28,7 +28,7 @@ System dependency: **ffmpeg** (only available inside Docker).
 
 ## Gotchas
 
-- Cache directory is hardcoded to `/output/.pyclip-cache/` (Docker path). Don't change without updating both the CLI and README.
+- The cache defaults to `.pyclip-cache/` in the current directory; Docker sets `PYCLIP_CACHE_DIR` to `/output/.pyclip-cache/`. Update the CLI, Dockerfile, and README together if changing cache behavior.
 - Video clips (.mp4) use ffmpeg subprocess; audio clips use pydub. Two different code paths.
 - `yt-dlp` is imported lazily inside functions (not at module top).
 - All progress output goes to stderr (`Console(stderr=True)`).
